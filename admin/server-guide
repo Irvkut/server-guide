@@ -1,0 +1,2070 @@
+#!/usr/bin/env python3
+
+import sys
+import json
+import subprocess
+import webbrowser
+from pathlib import Path
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+
+ROOT = Path(__file__).resolve().parent.parent
+ADMIN = ROOT / "admin"
+CONFIG = ROOT / "config"
+ASSETS = ROOT / "assets"
+
+SITE_PORT = 8080
+ADMIN_PORT = 8081
+
+
+def ensure_structure():
+    CONFIG.mkdir(exist_ok=True)
+    ASSETS.mkdir(exist_ok=True)
+
+    defaults = {
+        "site.json": {
+            "name": "Server Guide",
+            "description": "Community server directory"
+        },
+        "servers.json": [],
+        "news.json": [],
+        "community.json": [],
+        "downloads.json": [],
+        "rules.json": [],
+        "theme.json": {
+            "accent": "#4da3ff",
+            "glow": 0.35,
+            "panelOpacity": 0.72,
+            "radius": 8,
+            "animationSpeed": 1
+        }
+    }
+
+    for filename, default in defaults.items():
+        path = CONFIG / filename
+
+        if not path.exists():
+            path.write_text(
+                json.dumps(default, indent=2) + "\n",
+                encoding="utf-8"
+            )
+
+
+def load_json(filename):
+    path = CONFIG / filename
+
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_json(filename, data):
+    path = CONFIG / filename
+
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+
+
+def create_dashboard():
+    ADMIN.mkdir(parents=True, exist_ok=True)
+
+    dashboard = ADMIN / "dashboard.html"
+
+    html = r'''<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Server Guide Admin</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: #e8f3ff;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(45, 116, 181, .30),
+            transparent 45%
+        ),
+        linear-gradient(
+            180deg,
+            #081421 0%,
+            #050b12 100%
+        );
+}
+
+header {
+    padding: 26px 34px;
+
+    border-bottom: 1px solid rgba(91, 160, 214, .35);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(21, 51, 78, .95),
+            rgba(7, 18, 30, .95)
+        );
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, .35);
+}
+
+header h1 {
+    margin: 0;
+
+    font-size: 23px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+header p {
+    margin: 7px 0 0;
+
+    color: #88a9c5;
+    font-size: 13px;
+}
+
+main {
+    width: min(1200px, calc(100% - 40px));
+    margin: auto;
+
+    padding: 30px 0 60px;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-bottom: 20px;
+}
+
+button {
+    border: 1px solid #315f86;
+    border-radius: 5px;
+
+    padding: 10px 15px;
+
+    color: #eaf5ff;
+
+    background:
+        linear-gradient(
+            180deg,
+            #173d61,
+            #102b46
+        );
+
+    cursor: pointer;
+}
+
+button:hover {
+    background:
+        linear-gradient(
+            180deg,
+            #23547f,
+            #173b5e
+        );
+}
+
+.panel {
+    margin-bottom: 20px;
+    padding: 22px;
+
+    border: 1px solid rgba(69, 125, 169, .45);
+    border-radius: 7px;
+
+    background: rgba(10, 27, 43, .82);
+
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, .25);
+}
+
+.panel h2 {
+    margin: 0 0 16px;
+
+    font-size: 16px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.server {
+    display: grid;
+
+    grid-template-columns:
+        minmax(180px, 1.3fr)
+        minmax(140px, 1fr)
+        minmax(180px, 1fr)
+        auto;
+
+    gap: 15px;
+
+    align-items: center;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid rgba(71, 105, 132, .3);
+}
+
+.server:last-child {
+    border-bottom: 0;
+}
+
+.server-name {
+    font-weight: 600;
+}
+
+.server-id {
+    margin-top: 4px;
+
+    color: #6f91ad;
+    font-size: 11px;
+}
+
+.server-meta {
+    color: #a5bfd5;
+    font-size: 13px;
+}
+
+.online {
+    color: #78dca5;
+}
+
+.offline {
+    color: #e97979;
+}
+
+.unknown {
+    color: #d3bd71;
+}
+
+pre {
+    margin: 0;
+
+    padding: 17px;
+
+    max-height: 450px;
+
+    overflow: auto;
+
+    border-radius: 5px;
+
+    background: #03080d;
+
+    color: #9ec4e2;
+
+    font-size: 12px;
+}
+
+.empty {
+    padding: 20px;
+
+    color: #7894aa;
+    text-align: center;
+}
+
+@media(max-width:800px) {
+    .server {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+.editor {
+    margin-bottom: 24px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.editor-header h2 {
+    margin: 4px 0 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.form-grid label.full {
+    grid-column: 1 / -1;
+}
+
+.form-grid label.checkbox {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+}
+
+.form-grid label span {
+    font-size: 12px;
+    color: #aebbd0;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 11px;
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 6px;
+    outline: none;
+    background: rgba(0,0,0,.25);
+    color: #e9f1ff;
+    font: inherit;
+}
+
+.form-grid textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+    border-color: #4da3ff;
+    box-shadow: 0 0 0 2px rgba(77,163,255,.12);
+}
+
+.form-grid label.checkbox input {
+    width: auto;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.editor-actions button,
+.editor-header button,
+.actions button {
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px;
+    padding: 8px 13px;
+    background: rgba(77,163,255,.12);
+    color: #dcecff;
+    cursor: pointer;
+    font: inherit;
+}
+
+.editor-actions button:hover,
+.editor-header button:hover,
+.actions button:hover {
+    background: rgba(77,163,255,.22);
+}
+
+.actions {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+}
+
+.actions button.danger {
+    background: rgba(190,70,70,.12);
+    border-color: rgba(190,70,70,.22);
+}
+
+.actions button.danger:hover {
+    background: rgba(190,70,70,.22);
+}
+
+@media (max-width: 760px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid label.full {
+        grid-column: auto;
+    }
+
+    .editor-header {
+        align-items: flex-start;
+    }
+
+    .actions {
+        flex-wrap: wrap;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Server Guide Admin</h1>
+    <p>Local configuration and publishing dashboard</p>
+</header>
+
+<main>
+
+    <div class="toolbar">
+        <button onclick="loadServers()">Refresh</button>
+
+        <button onclick="window.open(
+            'http://127.0.0.1:8080/',
+            '_blank'
+        )">
+            Preview Website
+        </button>
+
+        <button onclick="runValidate()">
+            Validate
+        </button>
+    </div>
+
+    <section class="panel">
+        <h2>Servers</h2>
+
+        <section id="server-editor" class="editor hidden">
+
+            <div class="editor-header">
+                <div>
+                    <div class="eyebrow">SERVER CONFIGURATION</div>
+                    <h2 id="editor-title">Add Server</h2>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="document.getElementById('server-editor').classList.add('hidden')"
+                >
+                    Cancel
+                </button>
+            </div>
+
+            <div class="form-grid">
+
+                <label>
+                    <span>Server ID</span>
+                    <input id="server-id" type="text" placeholder="my-server">
+                </label>
+
+                <label>
+                    <span>Display Name</span>
+                    <input id="server-name" type="text" placeholder="My Server">
+                </label>
+
+                <label>
+                    <span>Short Name</span>
+                    <input id="server-shortName" type="text" placeholder="SERVER">
+                </label>
+
+                <label>
+                    <span>Game</span>
+                    <input id="server-game" type="text" placeholder="Game">
+                </label>
+
+                <label>
+                    <span>Mode</span>
+                    <input id="server-mode" type="text" placeholder="Survival">
+                </label>
+
+                <label>
+                    <span>Status</span>
+                    <select id="server-status">
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Address</span>
+                    <input id="server-address" type="text" placeholder="127.0.0.1:27015">
+                </label>
+
+                <label>
+                    <span>Map</span>
+                    <input id="server-map" type="text" placeholder="Map name">
+                </label>
+
+                <label>
+                    <span>Players</span>
+                    <input id="server-players" type="number" min="0" value="0">
+                </label>
+
+                <label>
+                    <span>Max Players</span>
+                    <input id="server-maxPlayers" type="number" min="1" value="64">
+                </label>
+
+                <label class="full">
+                    <span>Description</span>
+                    <input id="server-description" type="text" placeholder="Short server description">
+                </label>
+
+                <label class="full">
+                    <span>Long Description</span>
+                    <textarea id="server-longDescription" rows="4" placeholder="Detailed server description"></textarea>
+                </label>
+
+                <label>
+                    <span>Icon</span>
+                    <input id="server-icon" type="text" placeholder="SG">
+                </label>
+
+                <label>
+                    <span>Artwork</span>
+                    <input id="server-artwork" type="text" placeholder="images/servers/example.jpg">
+                </label>
+
+                <label>
+                    <span>Logo</span>
+                    <input id="server-logo" type="text" placeholder="images/servers/example/logo.png">
+                </label>
+
+                <label>
+                    <span>Banner</span>
+                    <input id="server-banner" type="text" placeholder="images/servers/example/banner.jpg">
+                </label>
+
+                <label class="full">
+                    <span>Tags</span>
+                    <input id="server-tags" type="text" placeholder="coop, survival, community">
+                </label>
+
+                <label>
+                    <span>Discord</span>
+                    <input id="server-discord" type="text" placeholder="https://discord.gg/...">
+                </label>
+
+                <label>
+                    <span>Steam</span>
+                    <input id="server-steam" type="text" placeholder="steam://connect/...">
+                </label>
+
+                <label>
+                    <span>Website</span>
+                    <input id="server-website" type="text" placeholder="https://...">
+                </label>
+
+                <label class="checkbox">
+                    <input id="featured" type="checkbox">
+                    <span>Featured server</span>
+                </label>
+
+            </div>
+
+            <div class="editor-actions">
+                <button
+                    type="button"
+                    onclick="saveServer()"
+                >
+                    Save Server
+                </button>
+
+                <button
+                    type="button"
+                    onclick="clearServerForm()"
+                >
+                    Clear
+                </button>
+            </div>
+
+        </section>
+
+        <div id="servers">
+            Loading...
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>servers.json</h2>
+
+        <pre id="raw">Loading...</pre>
+    </section>
+
+</main>
+
+<script>
+
+let servers = [];
+let editingId = null;
+
+
+async function loadServers() {
+
+    const container =
+        document.getElementById("servers");
+
+    const raw =
+        document.getElementById("raw");
+
+    try {
+
+        const response =
+            await fetch(
+                "/config/servers.json?cache=" +
+                Date.now()
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        servers =
+            await response.json();
+
+        if (!Array.isArray(servers)) {
+            throw new Error(
+                "servers.json must contain an array"
+            );
+        }
+
+        raw.textContent =
+            JSON.stringify(
+                servers,
+                null,
+                2
+            );
+
+        renderServers();
+
+    } catch(error) {
+
+        container.innerHTML =
+            '<div class="empty">' +
+            'Unable to load config/servers.json<br><br>' +
+            escapeHtml(error.message) +
+            '</div>';
+    }
+}
+
+
+function renderServers() {
+
+    const container =
+        document.getElementById("servers");
+
+    if (!servers.length) {
+
+        container.innerHTML =
+            '<div class="empty">' +
+            'No servers configured.' +
+            '</div>';
+
+        return;
+    }
+
+    container.innerHTML =
+        servers.map(server => {
+
+            const status =
+                String(
+                    server.status || "unknown"
+                ).toLowerCase();
+
+            return `
+                <div class="server">
+
+                    <div>
+                        <div class="server-name">
+                            ${escapeHtml(
+                                server.name || "Unnamed"
+                            )}
+                        </div>
+
+                        <div class="server-id">
+                            ${escapeHtml(
+                                server.id || ""
+                            )}
+                        </div>
+                    </div>
+
+                    <div class="server-meta">
+                        ${escapeHtml(
+                            server.game || "Unknown"
+                        )}
+                        ·
+                        ${escapeHtml(
+                            server.mode || "Unknown"
+                        )}
+                    </div>
+
+                    <div class="server-meta">
+                        ${escapeHtml(
+                            server.address ||
+                            "No address"
+                        )}
+                    </div>
+
+                    <div class="${escapeHtml(status)}">
+                        ${escapeHtml(status)}
+                    </div>
+
+                    <div class="actions">
+
+                        <button
+                            onclick="editServer(
+                                '${escapeJs(server.id || "")}'
+                            )">
+                            Edit
+                        </button>
+
+                        <button
+                            class="danger"
+                            onclick="deleteServer(
+                                '${escapeJs(server.id || "")}'
+                            )">
+                            Delete
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+function newServer() {
+
+    editingId = null;
+
+    clearServerForm();
+
+    showEditor("Add Server");
+}
+
+
+function editServer(id) {
+
+    const server =
+        servers.find(
+            item =>
+                String(item.id) === String(id)
+        );
+
+    if (!server) {
+        alert("Server not found.");
+        return;
+    }
+
+    editingId =
+        String(server.id);
+
+    setValue("id", server.id);
+    setValue("name", server.name);
+    setValue("shortName", server.shortName);
+    setValue("description", server.description);
+    setValue("longDescription", server.longDescription);
+    setValue("game", server.game);
+    setValue("mode", server.mode);
+    setValue("map", server.map);
+    setValue("players", server.players);
+    setValue("maxPlayers", server.maxPlayers);
+    setValue("address", server.address);
+    setValue("status", server.status || "unknown");
+    setValue("icon", server.icon);
+    setValue("artwork", server.artwork);
+    setValue("logo", server.logo);
+    setValue("banner", server.banner);
+
+    setValue(
+        "tags",
+        Array.isArray(server.tags)
+            ? server.tags.join(", ")
+            : ""
+    );
+
+    setValue(
+        "discord",
+        server.links?.discord || "#"
+    );
+
+    setValue(
+        "steam",
+        server.links?.steam || "#"
+    );
+
+    setValue(
+        "website",
+        server.links?.website || "#"
+    );
+
+    document.getElementById(
+        "featured"
+    ).checked =
+        Boolean(server.featured);
+
+    showEditor("Edit Server");
+}
+
+
+function showEditor(title) {
+
+    const editor =
+        document.getElementById(
+            "server-editor"
+        );
+
+    if (!editor) {
+        return;
+    }
+
+    document.getElementById(
+        "editor-title"
+    ).textContent = title;
+
+    editor.classList.remove("hidden");
+
+    editor.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+async function saveServer() {
+
+    const id =
+        getValue("id").trim();
+
+    const name =
+        getValue("name").trim();
+
+    if (!id || !name) {
+
+        alert(
+            "Server ID and name are required."
+        );
+
+        return;
+    }
+
+    const server = {
+
+        id: id,
+
+        name: name,
+
+        shortName:
+            getValue("shortName") ||
+            name.slice(0, 3).toUpperCase(),
+
+        description:
+            getValue("description"),
+
+        longDescription:
+            getValue("longDescription") ||
+            getValue("description"),
+
+        game:
+            getValue("game"),
+
+        mode:
+            getValue("mode"),
+
+        map:
+            getValue("map"),
+
+        players:
+            getValue("players") || "0",
+
+        maxPlayers:
+            getValue("maxPlayers") || "64",
+
+        address:
+            getValue("address"),
+
+        status:
+            getValue("status") || "unknown",
+
+        featured:
+            document.getElementById(
+                "featured"
+            ).checked,
+
+        icon:
+            getValue("icon") ||
+            name.slice(0, 2).toUpperCase(),
+
+        artwork:
+            getValue("artwork"),
+
+        logo:
+            getValue("logo"),
+
+        banner:
+            getValue("banner"),
+
+        tags:
+            getValue("tags")
+                .split(",")
+                .map(
+                    value => value.trim()
+                )
+                .filter(Boolean),
+
+        links: {
+            discord:
+                getValue("discord") || "#",
+
+            steam:
+                getValue("steam") || "#",
+
+            website:
+                getValue("website") || "#"
+        }
+    };
+
+    const action =
+        editingId === null
+            ? "create"
+            : "update";
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/servers",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            action: action,
+                            originalId:
+                                editingId,
+                            server: server
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !result.ok
+        ) {
+            throw new Error(
+                result.error ||
+                "Unable to save server."
+            );
+        }
+
+        alert(
+            "Server saved successfully."
+        );
+
+        editingId = null;
+
+        clearServerForm();
+
+        document.getElementById(
+            "server-editor"
+        ).classList.add("hidden");
+
+        await loadServers();
+
+    } catch(error) {
+
+        alert(
+            "Unable to save server:\n\n" +
+            error.message
+        );
+    }
+}
+
+
+async function deleteServer(id) {
+
+    const server =
+        servers.find(
+            item =>
+                String(item.id) === String(id)
+        );
+
+    if (!server) {
+        return;
+    }
+
+    if (
+        !confirm(
+            "Delete '" +
+            server.name +
+            "'?"
+        )
+    ) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/servers",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            action: "delete",
+                            id: id
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !result.ok
+        ) {
+            throw new Error(
+                result.error ||
+                "Unable to delete server."
+            );
+        }
+
+        await loadServers();
+
+    } catch(error) {
+
+        alert(
+            "Unable to delete server:\n\n" +
+            error.message
+        );
+    }
+}
+
+
+function clearServerForm() {
+
+    const fields = [
+        "id",
+        "name",
+        "shortName",
+        "description",
+        "longDescription",
+        "game",
+        "mode",
+        "map",
+        "players",
+        "maxPlayers",
+        "address",
+        "icon",
+        "artwork",
+        "logo",
+        "banner",
+        "tags",
+        "discord",
+        "steam",
+        "website"
+    ];
+
+    fields.forEach(
+        field =>
+            setValue(
+                field,
+                ""
+            )
+    );
+
+    setValue("players", "0");
+    setValue("maxPlayers", "64");
+    setValue("status", "online");
+
+    document.getElementById(
+        "featured"
+    ).checked = false;
+}
+
+
+function setValue(field, value) {
+
+    const element =
+        document.getElementById(
+            "server-" + field
+        );
+
+    if (element) {
+        element.value =
+            value == null
+                ? ""
+                : String(value);
+    }
+}
+
+
+function getValue(field) {
+
+    const element =
+        document.getElementById(
+            "server-" + field
+        );
+
+    return element
+        ? element.value
+        : "";
+}
+
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function escapeJs(value) {
+
+    return String(value)
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r");
+}
+
+
+async function runValidate() {
+
+    alert(
+        "Run this in the terminal:\n\n" +
+        "./admin/server-guide validate"
+    );
+}
+
+
+loadServers();
+
+</script>
+
+</body>
+</html>
+'''
+
+    dashboard.write_text(
+        html,
+        encoding="utf-8"
+    )
+
+
+def list_servers():
+
+    ensure_structure()
+
+    servers = load_json("servers.json")
+
+    print()
+    print("SERVERS")
+    print("=" * 70)
+
+    if not servers:
+        print("No servers configured.")
+        return
+
+    for index, server in enumerate(servers, 1):
+
+        status = server.get(
+            "status",
+            "unknown"
+        )
+
+        featured = (
+            " ★ FEATURED"
+            if server.get("featured")
+            else ""
+        )
+
+        print(
+            f"{index}. "
+            f"{server.get('name', 'Unnamed')} "
+            f"[{server.get('id', '?')}] "
+            f"- {status}"
+            f"{featured}"
+        )
+
+        print(
+            f"   {server.get('game', 'Unknown')} | "
+            f"{server.get('mode', 'Unknown')} | "
+            f"{server.get('address', 'No address')}"
+        )
+
+
+def add_server():
+
+    ensure_structure()
+
+    print()
+    print("ADD SERVER")
+    print("=" * 40)
+
+    sid = input("ID: ").strip()
+
+    if not sid:
+        print("ID is required.")
+        return
+
+    name = input("Display name: ").strip()
+    game = input("Game: ").strip()
+    mode = input("Mode: ").strip()
+    address = input("Address/IP: ").strip()
+    map_name = input("Map: ").strip()
+    max_players = (
+        input("Max players [64]: ").strip()
+        or "64"
+    )
+    description = input(
+        "Description: "
+    ).strip()
+
+    servers = load_json("servers.json")
+
+    if any(
+        str(s.get("id")) == sid
+        for s in servers
+    ):
+        print(
+            f"Server '{sid}' already exists."
+        )
+        return
+
+    server = {
+        "id": sid,
+        "name": name,
+        "shortName": (
+            name[:3].upper()
+            if name
+            else sid[:3].upper()
+        ),
+        "description": description,
+        "longDescription": description,
+        "game": game,
+        "mode": mode,
+        "map": map_name,
+        "players": "0",
+        "maxPlayers": max_players,
+        "address": address,
+        "status": "online",
+        "featured": False,
+        "icon": (
+            name[:2].upper()
+            if name
+            else sid[:2].upper()
+        ),
+        "artwork": "",
+        "logo": "",
+        "banner": "",
+        "tags": [],
+        "links": {
+            "discord": "#",
+            "steam": "#",
+            "website": "#"
+        }
+    }
+
+    servers.append(server)
+
+    save_json(
+        "servers.json",
+        servers
+    )
+
+    server_dir = (
+        ASSETS /
+        "servers" /
+        sid /
+        "screenshots"
+    )
+
+    server_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    print()
+    print(f"✓ Added {name}")
+    print(
+        f"  Assets: assets/servers/{sid}/"
+    )
+
+
+def remove_server():
+
+    ensure_structure()
+
+    servers = load_json("servers.json")
+
+    if not servers:
+        print("No servers configured.")
+        return
+
+    list_servers()
+
+    sid = input(
+        "\nServer ID to remove: "
+    ).strip()
+
+    matches = [
+        s for s in servers
+        if str(s.get("id")) == sid
+    ]
+
+    if not matches:
+        print("Server not found.")
+        return
+
+    confirm = input(
+        f"Remove '{matches[0].get('name', sid)}'? [y/N]: "
+    ).strip().lower()
+
+    if confirm != "y":
+        print("Cancelled.")
+        return
+
+    servers = [
+        s for s in servers
+        if str(s.get("id")) != sid
+    ]
+
+    save_json(
+        "servers.json",
+        servers
+    )
+
+    print("✓ Server removed.")
+
+
+def validate():
+
+    ensure_structure()
+
+    print()
+    print("SERVER GUIDE VALIDATION")
+    print("=" * 45)
+
+    errors = 0
+    warnings = 0
+
+    for filename in [
+        "site.json",
+        "servers.json",
+        "news.json",
+        "community.json",
+        "downloads.json",
+        "rules.json",
+        "theme.json"
+    ]:
+
+        path = CONFIG / filename
+
+        if not path.exists():
+
+            print(
+                f"[ERROR] Missing config/{filename}"
+            )
+
+            errors += 1
+            continue
+
+        try:
+
+            json.loads(
+                path.read_text(
+                    encoding="utf-8"
+                )
+            )
+
+            print(
+                f"[ OK ] config/{filename}"
+            )
+
+        except Exception as exc:
+
+            print(
+                f"[ERROR] config/{filename}: {exc}"
+            )
+
+            errors += 1
+
+    try:
+
+        servers = load_json(
+            "servers.json"
+        )
+
+        ids = set()
+
+        if not isinstance(
+            servers,
+            list
+        ):
+
+            print(
+                "[ERROR] servers.json must be an array"
+            )
+
+            errors += 1
+
+        else:
+
+            for server in servers:
+
+                sid = server.get("id")
+
+                if not sid:
+
+                    print(
+                        "[ERROR] Server missing ID"
+                    )
+
+                    errors += 1
+                    continue
+
+                if sid in ids:
+
+                    print(
+                        f"[ERROR] Duplicate server ID: {sid}"
+                    )
+
+                    errors += 1
+
+                ids.add(sid)
+
+                if not server.get("name"):
+
+                    print(
+                        f"[WARN] {sid}: missing name"
+                    )
+
+                    warnings += 1
+
+                if not server.get("address"):
+
+                    print(
+                        f"[WARN] {sid}: missing address"
+                    )
+
+                    warnings += 1
+
+                print(
+                    f"[ OK ] server: {sid}"
+                )
+
+    except Exception as exc:
+
+        print(
+            f"[ERROR] Unable to inspect servers: {exc}"
+        )
+
+        errors += 1
+
+    print()
+    print("=" * 45)
+    print(f"Errors:   {errors}")
+    print(f"Warnings: {warnings}")
+
+    return errors == 0
+
+
+def start_site():
+
+    ensure_structure()
+
+    print()
+    print(
+        f"Website preview:"
+        f" http://127.0.0.1:{SITE_PORT}"
+    )
+
+    print(
+        "Press Ctrl+C to stop."
+    )
+
+    print()
+
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "http.server",
+            str(SITE_PORT),
+            "--bind",
+            "127.0.0.1"
+        ],
+        cwd=ROOT
+    )
+
+
+class AdminHandler(SimpleHTTPRequestHandler):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(directory=str(ROOT), **kwargs)
+
+    def _json_response(self, status, payload):
+        body = json.dumps(payload).encode("utf-8")
+
+        self.send_response(status)
+        self.send_header(
+            "Content-Type",
+            "application/json; charset=utf-8"
+        )
+        self.send_header(
+            "Content-Length",
+            str(len(body))
+        )
+        self.end_headers()
+
+        self.wfile.write(body)
+
+    def _read_json(self):
+        try:
+            length = int(
+                self.headers.get(
+                    "Content-Length",
+                    "0"
+                )
+            )
+
+            if length <= 0:
+                return None
+
+            body = self.rfile.read(length)
+
+            return json.loads(
+                body.decode("utf-8")
+            )
+
+        except Exception:
+            return None
+
+    def do_POST(self):
+
+        if (
+            self.path.split("?", 1)[0]
+            != "/api/servers"
+        ):
+            self.send_error(404)
+            return
+
+        payload = self._read_json()
+
+        if not isinstance(payload, dict):
+            self._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": "Invalid JSON request."
+                }
+            )
+            return
+
+        action = payload.get("action")
+
+        try:
+
+            servers = load_json(
+                "servers.json"
+            )
+
+            if not isinstance(servers, list):
+                raise ValueError(
+                    "servers.json must contain an array."
+                )
+
+            if action == "create":
+
+                server = payload.get(
+                    "server"
+                )
+
+                if not isinstance(server, dict):
+                    raise ValueError(
+                        "Missing server data."
+                    )
+
+                server_id = str(
+                    server.get("id", "")
+                ).strip()
+
+                if not server_id:
+                    raise ValueError(
+                        "Server ID is required."
+                    )
+
+                if any(
+                    str(item.get("id", "")) ==
+                    server_id
+                    for item in servers
+                ):
+                    raise ValueError(
+                        "A server with that ID already exists."
+                    )
+
+                servers.append(server)
+
+                save_json(
+                    "servers.json",
+                    servers
+                )
+
+                asset_dir = (
+                    ASSETS /
+                    "servers" /
+                    server_id /
+                    "screenshots"
+                )
+
+                asset_dir.mkdir(
+                    parents=True,
+                    exist_ok=True
+                )
+
+                self._json_response(
+                    200,
+                    {
+                        "ok": True,
+                        "server": server
+                    }
+                )
+                return
+
+            if action == "update":
+
+                original_id = str(
+                    payload.get(
+                        "originalId",
+                        ""
+                    )
+                ).strip()
+
+                server = payload.get(
+                    "server"
+                )
+
+                if not original_id:
+                    raise ValueError(
+                        "Original server ID is required."
+                    )
+
+                if not isinstance(server, dict):
+                    raise ValueError(
+                        "Missing server data."
+                    )
+
+                new_id = str(
+                    server.get("id", "")
+                ).strip()
+
+                if not new_id:
+                    raise ValueError(
+                        "Server ID is required."
+                    )
+
+                index = next(
+                    (
+                        i
+                        for i, item
+                        in enumerate(servers)
+                        if str(
+                            item.get("id", "")
+                        ) == original_id
+                    ),
+                    None
+                )
+
+                if index is None:
+                    raise ValueError(
+                        "Server not found."
+                    )
+
+                if any(
+                    i != index and
+                    str(item.get("id", "")) ==
+                    new_id
+                    for i, item
+                    in enumerate(servers)
+                ):
+                    raise ValueError(
+                        "A server with that ID already exists."
+                    )
+
+                servers[index] = server
+
+                save_json(
+                    "servers.json",
+                    servers
+                )
+
+                asset_dir = (
+                    ASSETS /
+                    "servers" /
+                    new_id /
+                    "screenshots"
+                )
+
+                asset_dir.mkdir(
+                    parents=True,
+                    exist_ok=True
+                )
+
+                self._json_response(
+                    200,
+                    {
+                        "ok": True,
+                        "server": server
+                    }
+                )
+                return
+
+            if action == "delete":
+
+                server_id = str(
+                    payload.get(
+                        "id",
+                        ""
+                    )
+                ).strip()
+
+                if not server_id:
+                    raise ValueError(
+                        "Server ID is required."
+                    )
+
+                original_count = len(
+                    servers
+                )
+
+                servers = [
+                    item
+                    for item in servers
+                    if str(
+                        item.get("id", "")
+                    ) != server_id
+                ]
+
+                if len(servers) == original_count:
+                    raise ValueError(
+                        "Server not found."
+                    )
+
+                save_json(
+                    "servers.json",
+                    servers
+                )
+
+                self._json_response(
+                    200,
+                    {
+                        "ok": True
+                    }
+                )
+                return
+
+            raise ValueError(
+                "Unknown action."
+            )
+
+        except Exception as error:
+
+            self._json_response(
+                400,
+                {
+                    "ok": False,
+                    "error": str(error)
+                }
+            )
+
+
+
+def start_admin():
+
+    ensure_structure()
+
+    create_dashboard()
+
+    class Handler(
+        SimpleHTTPRequestHandler
+    ):
+
+        def __init__(
+            self,
+            *args,
+            **kwargs
+        ):
+
+            super().__init__(
+                *args,
+                directory=str(ROOT),
+                **kwargs
+            )
+
+    server = ThreadingHTTPServer(
+        (
+            "127.0.0.1",
+            ADMIN_PORT
+        ),
+        Handler
+    )
+
+    url = (
+        f"http://127.0.0.1:"
+        f"{ADMIN_PORT}/admin/dashboard.html"
+    )
+
+    print()
+    print(
+        f"Admin UI: {url}"
+    )
+
+    print(
+        "Press Ctrl+C to stop."
+    )
+
+    print()
+
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+
+    server.serve_forever()
+
+
+def git_status():
+
+    subprocess.run(
+        [
+            "git",
+            "status",
+            "--short",
+            "--branch"
+        ],
+        cwd=ROOT
+    )
+
+
+def publish():
+
+    print()
+    print("GIT PUBLISH")
+    print("=" * 40)
+
+    git_status()
+
+    message = input(
+        "\nCommit message: "
+    ).strip()
+
+    if not message:
+        message = "Update server guide"
+
+    subprocess.run(
+        ["git", "add", "."],
+        cwd=ROOT,
+        check=False
+    )
+
+    result = subprocess.run(
+        [
+            "git",
+            "commit",
+            "-m",
+            message
+        ],
+        cwd=ROOT
+    )
+
+    if result.returncode != 0:
+        print(
+            "No commit created."
+        )
+        return
+
+    subprocess.run(
+        [
+            "git",
+            "push",
+            "origin",
+            "main"
+        ],
+        cwd=ROOT
+    )
+
+
+def menu():
+
+    ensure_structure()
+
+    while True:
+
+        print("""
+╔══════════════════════════════════════╗
+║        SERVER GUIDE ADMIN            ║
+╠══════════════════════════════════════╣
+║  1. Servers                          ║
+║  2. Add Server                       ║
+║  3. Remove Server                    ║
+║  4. Validate                         ║
+║  5. Preview Website                  ║
+║  6. Admin UI                         ║
+║  7. Git Status                       ║
+║  8. Publish                          ║
+║  9. Initialize Config                ║
+║  0. Exit                             ║
+╚══════════════════════════════════════╝
+""")
+
+        choice = input(
+            "Select: "
+        ).strip()
+
+        if choice == "1":
+            list_servers()
+
+        elif choice == "2":
+            add_server()
+
+        elif choice == "3":
+            remove_server()
+
+        elif choice == "4":
+            validate()
+
+        elif choice == "5":
+            start_site()
+
+        elif choice == "6":
+            start_admin()
+
+        elif choice == "7":
+            git_status()
+
+        elif choice == "8":
+            publish()
+
+        elif choice == "9":
+            ensure_structure()
+            print(
+                "✓ Configuration initialized."
+            )
+
+        elif choice == "0":
+            break
+
+        else:
+            print(
+                "Invalid selection."
+            )
+
+
+def main():
+
+    ensure_structure()
+
+    if len(sys.argv) == 1:
+
+        menu()
+        return
+
+    command = sys.argv[1].lower()
+
+    commands = {
+        "ui": start_admin,
+        "dev": start_site,
+        "validate": validate,
+        "list": list_servers,
+        "add-server": add_server,
+        "remove-server": remove_server,
+        "git-status": git_status,
+        "publish": publish
+    }
+
+    if command in commands:
+
+        commands[command]()
+
+    elif command in (
+        "help",
+        "--help",
+        "-h"
+    ):
+
+        print("""
+Server Guide Admin
+
+Usage:
+
+  ./admin/server-guide
+
+  ./admin/server-guide ui
+  ./admin/server-guide dev
+  ./admin/server-guide validate
+  ./admin/server-guide list
+  ./admin/server-guide add-server
+  ./admin/server-guide remove-server
+  ./admin/server-guide git-status
+  ./admin/server-guide publish
+""")
+
+    else:
+
+        print(
+            f"Unknown command: {command}"
+        )
+
+
+if __name__ == "__main__":
+    main()
