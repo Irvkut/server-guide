@@ -1,27 +1,68 @@
 function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, c => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#039;"
-  }[c]));
+
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+
+    char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char])
+  );
+
 }
+
+
+function getServer(id) {
+
+  return SITE_CONFIG.servers.find(
+    server => server.id === id
+  );
+
+}
+
 
 function serverIcon(server) {
-  if (server.icon && (server.icon.includes("/") || server.icon.includes("."))) {
-    return `<img src="${escapeHTML(server.icon)}" alt="">`;
+
+  if (
+    server.icon &&
+    (
+      server.icon.includes("/") ||
+      server.icon.includes(".")
+    )
+  ) {
+
+    return `
+      <img
+        src="${escapeHTML(server.icon)}"
+        alt=""
+      >
+    `;
+
   }
 
-  return escapeHTML(server.icon || "SV");
+  return escapeHTML(
+    server.icon || "SV"
+  );
+
 }
 
+
 function serverCard(server) {
-  const online = String(server.status).toLowerCase() === "online";
-  const connect = `steam://connect/${server.address}`;
+
+  const online =
+    String(server.status).toLowerCase() === "online";
 
   return `
-    <article class="server-card ${online ? "online" : "offline"}">
+
+    <article
+      class="server-card ${online ? "online" : "offline"} ${server.featured ? "featured" : ""}"
+      data-server-name="${escapeHTML(server.name)}"
+      data-server-mode="${escapeHTML(server.mode)}"
+      data-server-status="${online ? "online" : "offline"}"
+    >
 
       <div class="server-top">
 
@@ -30,6 +71,7 @@ function serverCard(server) {
         </div>
 
         <div>
+
           <div class="server-name">
             ${escapeHTML(server.name)}
           </div>
@@ -37,141 +79,283 @@ function serverCard(server) {
           <div class="server-desc">
             ${escapeHTML(server.description)}
           </div>
+
         </div>
 
-        <div class="status">
-          <span class="dot"></span>
-          ${online ? "Online" : "Offline"}
+        <div class="server-status">
+
+          <span class="status-dot"></span>
+
+          ${online ? "ONLINE" : "OFFLINE"}
+
         </div>
 
       </div>
 
+
       <div class="server-meta">
 
         <div class="meta">
-          <small>Game</small>
+          <small>GAME</small>
           <span>${escapeHTML(server.game)}</span>
         </div>
 
         <div class="meta">
-          <small>Mode</small>
+          <small>MODE</small>
           <span>${escapeHTML(server.mode)}</span>
         </div>
 
         <div class="meta">
-          <small>Players</small>
+          <small>PLAYERS</small>
           <span>${escapeHTML(server.players)}</span>
         </div>
 
       </div>
 
+
       <div class="server-actions">
 
-        <span class="address">
+        <span class="server-address">
           ${escapeHTML(server.address)}
         </span>
 
-        ${
-          online
-            ? `<a class="connect" href="${connect}">CONNECT ›</a>`
-            : `<span class="connect disabled">OFFLINE</span>`
-        }
+        <a
+          class="connect-button"
+          href="${online ? `steam://connect/${server.address}` : `server.html?id=${encodeURIComponent(server.id)}`}"
+        >
+          ${online ? "CONNECT" : "VIEW SERVER"}
+        </a>
 
       </div>
 
     </article>
+
   `;
+
 }
 
-function renderCommon() {
 
-  document.querySelectorAll("[data-site-name]")
-    .forEach(e => e.textContent = SITE_CONFIG.site.name);
+function renderNavigation() {
 
-  document.querySelectorAll("[data-site-tagline]")
-    .forEach(e => e.textContent = SITE_CONFIG.site.tagline);
+  const target =
+    document.querySelector("[data-nav]");
 
-  document.querySelectorAll("[data-site-mark]")
-    .forEach(e => e.textContent = SITE_CONFIG.site.mark);
+  if (!target) return;
 
-  const nav = document.querySelector("[data-nav]");
+  const current =
+    document.body.dataset.page;
 
-  if (nav) {
+  target.innerHTML =
+    SITE_CONFIG.navigation
+      .map(item => `
 
-    const current = document.body.dataset.page;
-
-    nav.innerHTML = SITE_CONFIG.navigation.map(item => {
-
-      const active =
-        (current === "home" && item.page === "index.html") ||
-        item.page.replace(".html", "") === current;
-
-      return `
         <a
-          class="${active ? "active" : ""}"
-          href="${item.page}">
+          class="${item.key === current ? "active" : ""}"
+          href="${item.page}"
+        >
           ${escapeHTML(item.name)}
         </a>
-      `;
 
-    }).join("");
-  }
+      `)
+      .join("");
 
-  const footer = document.querySelector("[data-footer]");
+}
+
+
+function renderBranding() {
+
+  document
+    .querySelectorAll("[data-site-name]")
+    .forEach(
+      el =>
+        el.textContent =
+          SITE_CONFIG.site.name
+    );
+
+  document
+    .querySelectorAll("[data-site-tagline]")
+    .forEach(
+      el =>
+        el.textContent =
+          SITE_CONFIG.site.tagline
+    );
+
+  document
+    .querySelectorAll("[data-site-mark]")
+    .forEach(
+      el =>
+        el.textContent =
+          SITE_CONFIG.site.mark
+    );
+
+
+  const footer =
+    document.querySelector("[data-footer]");
 
   if (footer) {
+
     footer.innerHTML = `
-      <span>${escapeHTML(SITE_CONFIG.site.footerLeft)}</span>
-      <span>${escapeHTML(SITE_CONFIG.site.footerRight)}</span>
+
+      <span>
+        ${escapeHTML(
+          SITE_CONFIG.site.footer.left
+        )}
+      </span>
+
+      <span>
+        ${escapeHTML(
+          SITE_CONFIG.site.footer.right
+        )}
+      </span>
+
     `;
+
   }
 
-  const label = document.querySelector("[data-hero-label]");
-  const title = document.querySelector("[data-hero-title]");
-  const description = document.querySelector("[data-hero-description]");
+}
 
-  if (label) label.textContent = SITE_CONFIG.site.heroLabel;
-  if (title) title.textContent = SITE_CONFIG.site.heroTitle;
-  if (description) description.textContent = SITE_CONFIG.site.heroDescription;
 
-  const featured = document.querySelector("[data-featured-servers]");
+function renderHome() {
+
+  const featured =
+    SITE_CONFIG.servers.filter(
+      server => server.featured
+    )[0] ||
+    SITE_CONFIG.servers[0];
+
+  const label =
+    document.querySelector(
+      "[data-hero-label]"
+    );
+
+  const title =
+    document.querySelector(
+      "[data-hero-title]"
+    );
+
+  const description =
+    document.querySelector(
+      "[data-hero-description]"
+    );
+
+  const button =
+    document.querySelector(
+      "[data-hero-button]"
+    );
+
+  const art =
+    document.querySelector(
+      "[data-hero-art]"
+    );
+
 
   if (featured) {
-    featured.innerHTML =
+
+    if (label)
+      label.textContent =
+        "FEATURED SERVER";
+
+    if (title)
+      title.textContent =
+        featured.name;
+
+    if (description)
+      description.textContent =
+        featured.longDescription ||
+        featured.description;
+
+    if (button) {
+
+      button.href =
+        `server.html?id=${encodeURIComponent(featured.id)}`;
+
+      button.textContent =
+        "VIEW SERVER";
+
+    }
+
+    if (art)
+      art.textContent =
+        featured.shortName ||
+        featured.icon ||
+        "SV";
+
+  }
+
+
+  const carousel =
+    document.querySelector(
+      "[data-server-carousel]"
+    );
+
+  if (carousel) {
+
+    carousel.innerHTML =
       SITE_CONFIG.servers
-        .slice(0, 2)
         .map(serverCard)
         .join("");
+
   }
 
-  const info = document.querySelector("[data-home-info]");
 
-  if (info) {
-    info.innerHTML =
-      SITE_CONFIG.information.map(item => `
-        <article class="info-card">
+  const news =
+    document.querySelector(
+      "[data-home-news]"
+    );
 
-          <span class="eyebrow">
-            INFO
-          </span>
+  if (news) {
 
-          <h3>
-            ${escapeHTML(item.title)}
-          </h3>
+    news.innerHTML =
+      SITE_CONFIG.news
+        .slice(0,3)
+        .map(newsCard)
+        .join("");
 
-          <p>
-            ${escapeHTML(item.text)}
-          </p>
-
-        </article>
-      `).join("");
   }
 
-  const community = document.querySelector("[data-community]");
+}
 
-  if (community) {
-    community.innerHTML =
-      SITE_CONFIG.community.map(item => `
+
+function newsCard(item) {
+
+  return `
+
+    <article class="news-card">
+
+      <div class="news-date">
+        ${escapeHTML(item.date)}
+        ·
+        ${escapeHTML(item.category)}
+      </div>
+
+      <h3>
+        ${escapeHTML(item.title)}
+      </h3>
+
+      <p>
+        ${escapeHTML(item.text)}
+      </p>
+
+    </article>
+
+  `;
+
+}
+
+
+function renderCommunity() {
+
+  const target =
+    document.querySelector(
+      "[data-community]"
+    );
+
+  if (!target) return;
+
+  target.innerHTML =
+    SITE_CONFIG.community
+      .map(item => `
+
         <article class="content-card">
 
           <span class="eyebrow">
@@ -183,23 +367,38 @@ function renderCommon() {
           </h3>
 
           <p>
-            ${escapeHTML(item.text)}
+            ${escapeHTML(item.description)}
           </p>
 
-          <a class="button" href="${escapeHTML(item.url)}">
+          <a
+            class="store-button"
+            href="${escapeHTML(item.url)}"
+          >
             ${escapeHTML(item.button)}
             <span>›</span>
           </a>
 
         </article>
-      `).join("");
-  }
 
-  const downloads = document.querySelector("[data-downloads]");
+      `)
+      .join("");
 
-  if (downloads) {
-    downloads.innerHTML =
-      SITE_CONFIG.downloads.map(item => `
+}
+
+
+function renderDownloads() {
+
+  const target =
+    document.querySelector(
+      "[data-downloads]"
+    );
+
+  if (!target) return;
+
+  target.innerHTML =
+    SITE_CONFIG.downloads
+      .map(item => `
+
         <article class="content-card">
 
           <span class="eyebrow">
@@ -211,27 +410,42 @@ function renderCommon() {
           </h3>
 
           <p>
-            ${escapeHTML(item.text)}
+            ${escapeHTML(item.description)}
           </p>
 
-          <a class="button" href="${escapeHTML(item.url)}">
+          <a
+            class="store-button"
+            href="${escapeHTML(item.url)}"
+          >
             ${escapeHTML(item.button)}
             <span>›</span>
           </a>
 
         </article>
-      `).join("");
-  }
 
-  const rules = document.querySelector("[data-rules]");
+      `)
+      .join("");
 
-  if (rules) {
-    rules.innerHTML =
-      SITE_CONFIG.rules.map((rule, index) => `
+}
+
+
+function renderRules() {
+
+  const target =
+    document.querySelector(
+      "[data-rules]"
+    );
+
+  if (!target) return;
+
+  target.innerHTML =
+    SITE_CONFIG.rules
+      .map((rule,index) => `
+
         <article class="rule">
 
-          <div class="rule-num">
-            ${String(index + 1).padStart(2, "0")}
+          <div class="rule-number">
+            ${String(index + 1).padStart(2,"0")}
           </div>
 
           <div>
@@ -247,8 +461,23 @@ function renderCommon() {
           </div>
 
         </article>
-      `).join("");
-  }
+
+      `)
+      .join("");
+
 }
 
-document.addEventListener("DOMContentLoaded", renderCommon);
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    renderNavigation();
+    renderBranding();
+    renderHome();
+    renderCommunity();
+    renderDownloads();
+    renderRules();
+
+  }
+);

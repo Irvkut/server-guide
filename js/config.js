@@ -1,127 +1,362 @@
+/*
+============================================================
+ SERVER GUIDE 2.0 CONFIGURATION
+============================================================
+
+Most website changes should be made here.
+
+You should NOT normally need to edit the HTML files.
+
+============================================================
+*/
+
 const SITE_CONFIG = {
+
   site: {
     name: "SERVER GUIDE",
     tagline: "Game servers and community connections",
     mark: "SG",
-    heroLabel: "WELCOME",
-    heroTitle: "Choose a server",
-    heroDescription: "Select a server below to connect directly through Steam.",
-    footerLeft: "SERVER GUIDE",
-    footerRight: "© 2026"
+
+    hero: {
+      label: "FEATURED SERVER",
+      title: "Combine War",
+      description:
+        "Enter the battlefield. Choose your side and join the fight.",
+      button: "VIEW SERVER"
+    },
+
+    footer: {
+      left: "SERVER GUIDE",
+      right: "© 2026"
+    }
   },
 
+
+  /*
+  ==========================================================
+  NAVIGATION
+  ==========================================================
+  */
+
   navigation: [
-    { name: "Home", page: "index.html" },
-    { name: "Servers", page: "servers.html" },
-    { name: "Community", page: "community.html" },
-    { name: "Rules", page: "rules.html" },
-    { name: "Status", page: "status.html" },
-    { name: "Downloads", page: "downloads.html" }
+    {
+      name: "Home",
+      page: "index.html",
+      key: "home"
+    },
+    {
+      name: "Servers",
+      page: "servers.html",
+      key: "servers"
+    },
+    {
+      name: "Community",
+      page: "community.html",
+      key: "community"
+    },
+    {
+      name: "News",
+      page: "news.html",
+      key: "news"
+    },
+    {
+      name: "Status",
+      page: "status.html",
+      key: "status"
+    },
+    {
+      name: "Downloads",
+      page: "downloads.html",
+      key: "downloads"
+    },
+    {
+      name: "Rules",
+      page: "rules.html",
+      key: "rules"
+    }
   ],
 
+
+  /*
+  ==========================================================
+  SERVERS
+  ==========================================================
+  */
+
   servers: [
+
     {
+      id: "combine-war",
+
       name: "Combine War",
-      description: "Combine vs Rebels",
-      game: "Garry's Mod",
-      mode: "Conquest",
-      map: "Configure me",
-      players: "Configure me",
-      address: "YOUR.SERVER.IP:27015",
-      status: "online",
-      icon: "CW"
+
+      shortName: "CW",
+
+      description:
+        "Combine vs Rebels",
+
+      longDescription:
+        "A large-scale Combine versus Rebel warfare experience featuring objective-based combat and multiple game modes.",
+
+      game:
+        "Garry's Mod",
+
+      mode:
+        "Conquest",
+
+      map:
+        "Configure Me",
+
+      players:
+        "Configure Me",
+
+      maxPlayers:
+        "64",
+
+      address:
+        "YOUR.SERVER.IP:27015",
+
+      status:
+        "online",
+
+      featured:
+        true,
+
+      icon:
+        "CW",
+
+      artwork:
+        "",
+
+      tags: [
+        "Conquest",
+        "Combine",
+        "Rebels",
+        "Garry's Mod"
+      ],
+
+      links: {
+        workshop: "#",
+        discord: "#",
+        steam: "#"
+      }
     }
 
     /*
-    Add more servers like this:
+    ==========================================================
+    ADD ANOTHER SERVER LIKE THIS
+    ==========================================================
 
     ,{
+
+      id: "second-server",
+
       name: "Second Server",
-      description: "Your description",
-      game: "Garry's Mod",
-      mode: "TDM",
-      map: "gm_construct",
-      players: "0 / 32",
-      address: "123.123.123.123:27015",
-      status: "online",
-      icon: "S2"
+
+      shortName: "S2",
+
+      description:
+        "Your second server",
+
+      longDescription:
+        "Description of your second server.",
+
+      game:
+        "Garry's Mod",
+
+      mode:
+        "TDM",
+
+      map:
+        "gm_construct",
+
+      players:
+        "0 / 32",
+
+      maxPlayers:
+        "32",
+
+      address:
+        "123.123.123.123:27015",
+
+      status:
+        "online",
+
+      featured:
+        false,
+
+      icon:
+        "S2",
+
+      artwork:
+        "",
+
+      tags: [
+        "TDM",
+        "Garry's Mod"
+      ],
+
+      links: {
+        workshop: "#",
+        discord: "#",
+        steam: "#"
+      }
     }
+
+    ==========================================================
     */
   ],
 
-  information: [
+
+  /*
+  ==========================================================
+  NEWS
+  ==========================================================
+  */
+
+  news: [
+
     {
-      title: "How To Connect",
-      text: "Select Connect on an available server. Steam will open the game and attempt to join automatically."
+      date: "2026-10-05",
+      category: "SERVER GUIDE",
+      title: "Server Guide 2.0",
+      text:
+        "The server guide has received a complete storefront-inspired redesign."
     },
+
     {
-      title: "Need Help?",
-      text: "If Steam does not launch, copy the server address and connect manually through the game's console."
-    },
-    {
-      title: "Community",
-      text: "Join the community for announcements, updates, events, and other players."
+      date: "2026-10-01",
+      category: "COMBINE WAR",
+      title: "Development Update",
+      text:
+        "Development continues on the Combine War experience."
     }
+
   ],
+
+
+  /*
+  ==========================================================
+  COMMUNITY
+  ==========================================================
+  */
 
   community: [
+
     {
       title: "Discord",
-      text: "Add your Discord invite here.",
-      button: "OPEN DISCORD",
-      url: "#"
+      description:
+        "Join the community for announcements, events and discussion.",
+      button:
+        "OPEN DISCORD",
+      url:
+        "#"
     },
+
     {
       title: "Steam",
-      text: "Add your Steam group here.",
-      button: "OPEN STEAM",
-      url: "#"
+      description:
+        "Find the community and related Steam content.",
+      button:
+        "OPEN STEAM",
+      url:
+        "#"
     },
+
     {
       title: "GitHub",
-      text: "Add your project repository here.",
-      button: "OPEN GITHUB",
-      url: "https://github.com/Irvkut/server-guide"
+      description:
+        "Follow development and browse the project's source.",
+      button:
+        "OPEN GITHUB",
+      url:
+        "https://github.com/Irvkut/server-guide"
     }
+
   ],
+
+
+  /*
+  ==========================================================
+  DOWNLOADS
+  ==========================================================
+  */
 
   downloads: [
+
     {
       title: "Workshop Collection",
-      text: "Add your Steam Workshop collection here.",
-      button: "OPEN WORKSHOP",
-      url: "#"
+      description:
+        "Required or recommended Steam Workshop content.",
+      button:
+        "OPEN WORKSHOP",
+      url:
+        "#"
     },
+
     {
       title: "Required Content",
-      text: "List required downloads or client-side files here.",
-      button: "DOWNLOAD",
-      url: "#"
+      description:
+        "Client-side files and other required downloads.",
+      button:
+        "DOWNLOAD",
+      url:
+        "#"
     },
+
     {
-      title: "Server Guide",
-      text: "Keep setup instructions and useful resources here.",
-      button: "MORE INFO",
-      url: "index.html"
+      title: "Installation Guide",
+      description:
+        "Instructions for getting everything ready to play.",
+      button:
+        "READ GUIDE",
+      url:
+        "index.html"
     }
+
   ],
 
+
+  /*
+  ==========================================================
+  RULES
+  ==========================================================
+  */
+
   rules: [
+
     {
-      title: "Respect Other Players",
-      text: "Do not harass, threaten, or intentionally disrupt other players."
+      title:
+        "Respect Other Players",
+
+      text:
+        "Do not harass, threaten, or intentionally disrupt other players."
     },
+
     {
-      title: "No Cheating",
-      text: "Do not use cheats, exploits, scripts, or unauthorized tools that provide an unfair advantage."
+      title:
+        "No Cheating",
+
+      text:
+        "Cheats, unauthorized scripts, exploits and unfair modifications are prohibited."
     },
+
     {
-      title: "Follow Staff Instructions",
-      text: "Reasonable staff instructions must be followed while an issue is being handled."
+      title:
+        "Follow Staff Instructions",
+
+      text:
+        "Reasonable staff instructions must be followed while an issue is being handled."
     },
+
     {
-      title: "Use Common Sense",
-      text: "Do not deliberately abuse loopholes or ruin the experience for other players."
+      title:
+        "Use Common Sense",
+
+      text:
+        "Do not deliberately abuse loopholes or ruin the experience for other players."
     }
+
   ]
+
 };

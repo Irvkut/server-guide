@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>News — SERVER GUIDE</title>
+
+<link
+  rel="stylesheet"
+  href="css/style.css"
+>
+
+</head>
+
+
+<body data-page="news">
+
+
+<header class="topbar">
+
+<a class="brand" href="index.html">
+
+<span
+  class="brand-mark"
+  data-site-mark
+>
+SG
+</span>
+
+<span>
+
+<strong data-site-name>
+SERVER GUIDE
+</strong>
+
+<small data-site-tagline></small>
+
+</span>
+
+</a>
+
+
+<nav data-nav></nav>
+
+</header>
+
+
+<main class="shell">
+
+
+<section class="page-heading">
+
+<span class="eyebrow">
+WHAT'S NEW
+</span>
+
+<h1>
+News
+</h1>
+
+<p>
+Updates, announcements and development news.
+</p>
+
+</section>
+
+
+<section
+  class="card-grid"
+  data-news-list
+></section>
+
+
+</main>
+
+
+<footer data-footer></footer>
+
+
+<script src="js/config.js"></script>
+<script src="js/main.js"></script>
+
+
+<script>
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    const target =
+      document.querySelector(
+        "[data-news-list]"
+      );
+
+    if (!target) return;
+
+    target.innerHTML =
+      SITE_CONFIG.news
+        .map(newsCard)
+        .join("");
+
+  }
+);
+
+</script>
+
+</body>
+
+</html>

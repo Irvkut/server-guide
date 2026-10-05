@@ -1,31 +1,37 @@
-# Server Guide
+# Server Guide 2.0
 
-Multi-page static server guide with a PS3/XMB-inspired interface.
+A multi-page PS3 Store / XMB-inspired game server directory.
 
-## Configuration
+## Main configuration
 
-Most changes happen in:
+Almost everything is controlled from:
 
     js/config.js
 
 You can configure:
 
-- Site name
+- Website name
 - Tagline
 - Navigation
 - Servers
 - Server IPs
-- Server status
-- Maps
 - Player counts
-- Community links
+- Maps
+- Game modes
+- Server status
+- Server artwork
+- Featured servers
+- Server tags
+- Discord
+- Steam
+- GitHub
 - Downloads
 - Rules
-- Home information panels
+- News
 
 ## Adding a server
 
-Open:
+Edit:
 
     js/config.js
 
@@ -33,19 +39,23 @@ Find:
 
     servers: [
 
-Copy an existing server object and change its values.
+Copy an existing server object and add a comma before it.
 
-## Server icons
+## Server detail pages
 
-You can use text:
+Servers are accessed using:
 
-    icon: "CW"
+    server.html?id=combine-war
 
-or an image:
+The server cards automatically create these links.
 
-    icon: "images/servers/combine-war.png"
+## Steam connection
 
-## Preview locally
+Online servers automatically use:
+
+    steam://connect/IP:PORT
+
+## Local testing
 
 Run:
 
@@ -57,4 +67,20 @@ Then open:
 
 ## GitHub Pages
 
-This project works directly with GitHub Pages.
+The site is static and works with GitHub Pages.
+
+No backend is required for the basic site.
+
+## Future live status
+
+The status system currently uses configuration values.
+
+It can later be connected to a server-status API so that:
+
+- player counts
+- maps
+- online/offline state
+- server latency
+- uptime
+
+can update automatically.

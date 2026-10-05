@@ -1,38 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
 <title>Servers — SERVER GUIDE</title>
-<link rel="stylesheet" href="css/style.css">
+
+<link
+  rel="stylesheet"
+  href="css/style.css"
+>
+
 </head>
+
+
 <body data-page="servers">
 
+
 <header class="topbar">
+
 <a class="brand" href="index.html">
-<span class="brand-mark" data-site-mark>SG</span>
-<span><strong data-site-name>SERVER GUIDE</strong><small data-site-tagline></small></span>
+
+<span
+  class="brand-mark"
+  data-site-mark
+>
+SG
+</span>
+
+<span>
+
+<strong data-site-name>
+SERVER GUIDE
+</strong>
+
+<small data-site-tagline></small>
+
+</span>
+
 </a>
+
+
 <nav data-nav></nav>
+
 </header>
+
 
 <main class="shell">
 
+
 <section class="page-heading">
-<span class="eyebrow">DIRECTORY</span>
-<h1>Servers</h1>
-<p>Browse available servers and connect through Steam.</p>
+
+<span class="eyebrow">
+DIRECTORY
+</span>
+
+<h1>
+Servers
+</h1>
+
+<p>
+Browse servers, filter by mode or status,
+and connect directly through Steam.
+</p>
+
 </section>
 
-<section class="server-grid" data-server-list></section>
+
+<div class="filters">
+
+<input
+  class="search"
+  type="search"
+  placeholder="Search servers..."
+  data-server-search
+>
+
+<button
+  class="filter-button active"
+  data-filter="all"
+>
+ALL
+</button>
+
+<button
+  class="filter-button"
+  data-filter="online"
+>
+ONLINE
+</button>
+
+<button
+  class="filter-button"
+  data-filter="offline"
+>
+OFFLINE
+</button>
+
+</div>
+
+
+<section
+  class="server-carousel"
+  data-server-list
+  style="display:grid;grid-template-columns:repeat(2,1fr);overflow:visible"
+></section>
+
 
 </main>
 
+
 <footer data-footer></footer>
+
 
 <script src="js/config.js"></script>
 <script src="js/main.js"></script>
 <script src="js/servers.js"></script>
 
 </body>
+
 </html>
