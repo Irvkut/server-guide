@@ -1,30 +1,78 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
   const target =
-    document.querySelector(
-      "[data-server-list]"
-    );
+    document.querySelector("[data-server-list]");
 
   if (!target) return;
+
+
+  /*
+   * Load the authoritative server database.
+   *
+   * config/servers.json is managed by the admin system.
+   * SITE_CONFIG.servers remains as a fallback so the
+   * website still works if the JSON file cannot be loaded.
+   */
+
+  let servers = [];
+
+  try {
+
+    const response =
+      await fetch(
+        "config/servers.json?cache=" +
+        Date.now()
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        "HTTP " + response.status
+      );
+    }
+
+    const data =
+      await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        "servers.json is not an array"
+      );
+    }
+
+    servers = data;
+
+  } catch (error) {
+
+    console.warn(
+      "[Server Guide] Could not load config/servers.json:",
+      error
+    );
+
+    servers =
+      Array.isArray(SITE_CONFIG.servers)
+        ? SITE_CONFIG.servers
+        : [];
+
+  }
 
 
   function render() {
 
     target.innerHTML =
-      SITE_CONFIG.servers
+      servers
         .map(serverCard)
         .join("");
 
+    applyFilters();
+
   }
-
-
-  render();
 
 
   const search =
     document.querySelector(
       "[data-server-search]"
     );
+
 
   const filterButtons =
     document.querySelectorAll(
@@ -49,15 +97,21 @@ document.addEventListener("DOMContentLoaded", () => {
       .forEach(card => {
 
         const name =
-          card.dataset.serverName
-            .toLowerCase();
+          (
+            card.dataset.serverName || ""
+          ).toLowerCase();
+
 
         const mode =
-          card.dataset.serverMode
-            .toLowerCase();
+          (
+            card.dataset.serverMode || ""
+          ).toLowerCase();
+
 
         const status =
-          card.dataset.serverStatus;
+          (
+            card.dataset.serverStatus || ""
+          ).toLowerCase();
 
 
         const matchesSearch =
@@ -111,5 +165,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   });
+
+
+  /*
+   * Initial render.
+   */
+
+  render();
 
 });

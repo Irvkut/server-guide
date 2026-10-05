@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Server Guide Admin</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family:
+        Inter,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+    color: #e8f3ff;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(45, 116, 181, .30),
+            transparent 45%
+        ),
+        linear-gradient(
+            180deg,
+            #081421 0%,
+            #050b12 100%
+        );
+}
+
+header {
+    padding: 26px 34px;
+
+    border-bottom: 1px solid rgba(91, 160, 214, .35);
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(21, 51, 78, .95),
+            rgba(7, 18, 30, .95)
+        );
+
+    box-shadow:
+        0 10px 40px rgba(0, 0, 0, .35);
+}
+
+header h1 {
+    margin: 0;
+
+    font-size: 23px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+header p {
+    margin: 7px 0 0;
+
+    color: #88a9c5;
+    font-size: 13px;
+}
+
+main {
+    width: min(1200px, calc(100% - 40px));
+    margin: auto;
+
+    padding: 30px 0 60px;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-bottom: 20px;
+}
+
+button {
+    border: 1px solid #315f86;
+    border-radius: 5px;
+
+    padding: 10px 15px;
+
+    color: #eaf5ff;
+
+    background:
+        linear-gradient(
+            180deg,
+            #173d61,
+            #102b46
+        );
+
+    cursor: pointer;
+}
+
+button:hover {
+    background:
+        linear-gradient(
+            180deg,
+            #23547f,
+            #173b5e
+        );
+}
+
+.panel {
+    margin-bottom: 20px;
+    padding: 22px;
+
+    border: 1px solid rgba(69, 125, 169, .45);
+    border-radius: 7px;
+
+    background: rgba(10, 27, 43, .82);
+
+    box-shadow:
+        0 15px 45px rgba(0, 0, 0, .25);
+}
+
+.panel h2 {
+    margin: 0 0 16px;
+
+    font-size: 16px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.server {
+    display: grid;
+
+    grid-template-columns:
+        minmax(180px, 1.3fr)
+        minmax(140px, 1fr)
+        minmax(180px, 1fr)
+        auto;
+
+    gap: 15px;
+
+    align-items: center;
+
+    padding: 15px 0;
+
+    border-bottom: 1px solid rgba(71, 105, 132, .3);
+}
+
+.server:last-child {
+    border-bottom: 0;
+}
+
+.server-name {
+    font-weight: 600;
+}
+
+.server-id {
+    margin-top: 4px;
+
+    color: #6f91ad;
+    font-size: 11px;
+}
+
+.server-meta {
+    color: #a5bfd5;
+    font-size: 13px;
+}
+
+.online {
+    color: #78dca5;
+}
+
+.offline {
+    color: #e97979;
+}
+
+.unknown {
+    color: #d3bd71;
+}
+
+pre {
+    margin: 0;
+
+    padding: 17px;
+
+    max-height: 450px;
+
+    overflow: auto;
+
+    border-radius: 5px;
+
+    background: #03080d;
+
+    color: #9ec4e2;
+
+    font-size: 12px;
+}
+
+.empty {
+    padding: 20px;
+
+    color: #7894aa;
+    text-align: center;
+}
+
+@media(max-width:800px) {
+    .server {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+.editor {
+    margin-bottom: 24px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 10px;
+    background: rgba(255,255,255,.035);
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+}
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.editor-header h2 {
+    margin: 4px 0 0;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 0;
+}
+
+.form-grid label.full {
+    grid-column: 1 / -1;
+}
+
+.form-grid label.checkbox {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 9px;
+}
+
+.form-grid label span {
+    font-size: 12px;
+    color: #aebbd0;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 11px;
+    border: 1px solid rgba(255,255,255,.11);
+    border-radius: 6px;
+    outline: none;
+    background: rgba(0,0,0,.25);
+    color: #e9f1ff;
+    font: inherit;
+}
+
+.form-grid textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+    border-color: #4da3ff;
+    box-shadow: 0 0 0 2px rgba(77,163,255,.12);
+}
+
+.form-grid label.checkbox input {
+    width: auto;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.editor-actions button,
+.editor-header button,
+.actions button {
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px;
+    padding: 8px 13px;
+    background: rgba(77,163,255,.12);
+    color: #dcecff;
+    cursor: pointer;
+    font: inherit;
+}
+
+.editor-actions button:hover,
+.editor-header button:hover,
+.actions button:hover {
+    background: rgba(77,163,255,.22);
+}
+
+.actions {
+    display: flex;
+    gap: 7px;
+    align-items: center;
+}
+
+.actions button.danger {
+    background: rgba(190,70,70,.12);
+    border-color: rgba(190,70,70,.22);
+}
+
+.actions button.danger:hover {
+    background: rgba(190,70,70,.22);
+}
+
+@media (max-width: 760px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid label.full {
+        grid-column: auto;
+    }
+
+    .editor-header {
+        align-items: flex-start;
+    }
+
+    .actions {
+        flex-wrap: wrap;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Server Guide Admin</h1>
+    <p>Local configuration and publishing dashboard</p>
+</header>
+
+<main>
+
+    <div class="toolbar">
+        <button onclick="loadServers()">Refresh</button>
+
+        <button onclick="window.open(
+            'http://127.0.0.1:8080/',
+            '_blank'
+        )">
+            Preview Website
+        </button>
+
+        <button onclick="runValidate()">
+            Validate
+        </button>
+    </div>
+
+    <section class="panel">
+        <h2>Servers</h2>
+
+        <section id="server-editor" class="editor hidden">
+
+            <div class="editor-header">
+                <div>
+                    <div class="eyebrow">SERVER CONFIGURATION</div>
+                    <h2 id="editor-title">Add Server</h2>
+                </div>
+
+                <button
+                    type="button"
+                    onclick="document.getElementById('server-editor').classList.add('hidden')"
+                >
+                    Cancel
+                </button>
+            </div>
+
+            <div class="form-grid">
+
+                <label>
+                    <span>Server ID</span>
+                    <input id="server-id" type="text" placeholder="my-server">
+                </label>
+
+                <label>
+                    <span>Display Name</span>
+                    <input id="server-name" type="text" placeholder="My Server">
+                </label>
+
+                <label>
+                    <span>Short Name</span>
+                    <input id="server-shortName" type="text" placeholder="SERVER">
+                </label>
+
+                <label>
+                    <span>Game</span>
+                    <input id="server-game" type="text" placeholder="Game">
+                </label>
+
+                <label>
+                    <span>Mode</span>
+                    <input id="server-mode" type="text" placeholder="Survival">
+                </label>
+
+                <label>
+                    <span>Status</span>
+                    <select id="server-status">
+                        <option value="online">Online</option>
+                        <option value="offline">Offline</option>
+                        <option value="maintenance">Maintenance</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </label>
+
+                <label>
+                    <span>Address</span>
+                    <input id="server-address" type="text" placeholder="127.0.0.1:27015">
+                </label>
+
+                <label>
+                    <span>Map</span>
+                    <input id="server-map" type="text" placeholder="Map name">
+                </label>
+
+                <label>
+                    <span>Players</span>
+                    <input id="server-players" type="number" min="0" value="0">
+                </label>
+
+                <label>
+                    <span>Max Players</span>
+                    <input id="server-maxPlayers" type="number" min="1" value="64">
+                </label>
+
+                <label class="full">
+                    <span>Description</span>
+                    <input id="server-description" type="text" placeholder="Short server description">
+                </label>
+
+                <label class="full">
+                    <span>Long Description</span>
+                    <textarea id="server-longDescription" rows="4" placeholder="Detailed server description"></textarea>
+                </label>
+
+                <label>
+                    <span>Icon</span>
+                    <input id="server-icon" type="text" placeholder="SG">
+                </label>
+
+                <label>
+                    <span>Artwork</span>
+                    <input id="server-artwork" type="text" placeholder="images/servers/example.jpg">
+                </label>
+
+                <label>
+                    <span>Logo</span>
+                    <input id="server-logo" type="text" placeholder="images/servers/example/logo.png">
+                </label>
+
+                <label>
+                    <span>Banner</span>
+                    <input id="server-banner" type="text" placeholder="images/servers/example/banner.jpg">
+                </label>
+
+                <label class="full">
+                    <span>Tags</span>
+                    <input id="server-tags" type="text" placeholder="coop, survival, community">
+                </label>
+
+                <label>
+                    <span>Discord</span>
+                    <input id="server-discord" type="text" placeholder="https://discord.gg/...">
+                </label>
+
+                <label>
+                    <span>Steam</span>
+                    <input id="server-steam" type="text" placeholder="steam://connect/...">
+                </label>
+
+                <label>
+                    <span>Website</span>
+                    <input id="server-website" type="text" placeholder="https://...">
+                </label>
+
+                <label class="checkbox">
+                    <input id="featured" type="checkbox">
+                    <span>Featured server</span>
+                </label>
+
+            </div>
+
+            <div class="editor-actions">
+                <button
+                    type="button"
+                    onclick="saveServer()"
+                >
+                    Save Server
+                </button>
+
+                <button
+                    type="button"
+                    onclick="clearServerForm()"
+                >
+                    Clear
+                </button>
+            </div>
+
+        </section>
+
+        <div id="servers">
+            Loading...
+        </div>
+    </section>
+
+    <section class="panel">
+        <h2>servers.json</h2>
+
+        <pre id="raw">Loading...</pre>
+    </section>
+
+</main>
+
+<script>
+
+let servers = [];
+let editingId = null;
+
+
+async function loadServers() {
+
+    const container =
+        document.getElementById("servers");
+
+    const raw =
+        document.getElementById("raw");
+
+    try {
+
+        const response =
+            await fetch(
+                "/config/servers.json?cache=" +
+                Date.now()
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        servers =
+            await response.json();
+
+        if (!Array.isArray(servers)) {
+            throw new Error(
+                "servers.json must contain an array"
+            );
+        }
+
+        raw.textContent =
+            JSON.stringify(
+                servers,
+                null,
+                2
+            );
+
+        renderServers();
+
+    } catch(error) {
+
+        container.innerHTML =
+            '<div class="empty">' +
+            'Unable to load config/servers.json<br><br>' +
+            escapeHtml(error.message) +
+            '</div>';
+    }
+}
+
+
+function renderServers() {
+
+    const container =
+        document.getElementById("servers");
+
+    if (!servers.length) {
+
+        container.innerHTML =
+            '<div class="empty">' +
+            'No servers configured.' +
+            '</div>';
+
+        return;
+    }
+
+    container.innerHTML =
+        servers.map(server => {
+
+            const status =
+                String(
+                    server.status || "unknown"
+                ).toLowerCase();
+
+            return `
+                <div class="server">
+
+                    <div>
+                        <div class="server-name">
+                            ${escapeHtml(
+                                server.name || "Unnamed"
+                            )}
+                        </div>
+
+                        <div class="server-id">
+                            ${escapeHtml(
+                                server.id || ""
+                            )}
+                        </div>
+                    </div>
+
+                    <div class="server-meta">
+                        ${escapeHtml(
+                            server.game || "Unknown"
+                        )}
+                        ·
+                        ${escapeHtml(
+                            server.mode || "Unknown"
+                        )}
+                    </div>
+
+                    <div class="server-meta">
+                        ${escapeHtml(
+                            server.address ||
+                            "No address"
+                        )}
+                    </div>
+
+                    <div class="${escapeHtml(status)}">
+                        ${escapeHtml(status)}
+                    </div>
+
+                    <div class="actions">
+
+                        <button
+                            onclick="editServer(
+                                '${escapeJs(server.id || "")}'
+                            )">
+                            Edit
+                        </button>
+
+                        <button
+                            class="danger"
+                            onclick="deleteServer(
+                                '${escapeJs(server.id || "")}'
+                            )">
+                            Delete
+                        </button>
+
+                    </div>
+
+                </div>
+            `;
+
+        }).join("");
+}
+
+
+function newServer() {
+
+    editingId = null;
+
+    clearServerForm();
+
+    showEditor("Add Server");
+}
+
+
+function editServer(id) {
+
+    const server =
+        servers.find(
+            item =>
+                String(item.id) === String(id)
+        );
+
+    if (!server) {
+        alert("Server not found.");
+        return;
+    }
+
+    editingId =
+        String(server.id);
+
+    setValue("id", server.id);
+    setValue("name", server.name);
+    setValue("shortName", server.shortName);
+    setValue("description", server.description);
+    setValue("longDescription", server.longDescription);
+    setValue("game", server.game);
+    setValue("mode", server.mode);
+    setValue("map", server.map);
+    setValue("players", server.players);
+    setValue("maxPlayers", server.maxPlayers);
+    setValue("address", server.address);
+    setValue("status", server.status || "unknown");
+    setValue("icon", server.icon);
+    setValue("artwork", server.artwork);
+    setValue("logo", server.logo);
+    setValue("banner", server.banner);
+
+    setValue(
+        "tags",
+        Array.isArray(server.tags)
+            ? server.tags.join(", ")
+            : ""
+    );
+
+    setValue(
+        "discord",
+        server.links?.discord || "#"
+    );
+
+    setValue(
+        "steam",
+        server.links?.steam || "#"
+    );
+
+    setValue(
+        "website",
+        server.links?.website || "#"
+    );
+
+    document.getElementById(
+        "featured"
+    ).checked =
+        Boolean(server.featured);
+
+    showEditor("Edit Server");
+}
+
+
+function showEditor(title) {
+
+    const editor =
+        document.getElementById(
+            "server-editor"
+        );
+
+    if (!editor) {
+        return;
+    }
+
+    document.getElementById(
+        "editor-title"
+    ).textContent = title;
+
+    editor.classList.remove("hidden");
+
+    editor.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+async function saveServer() {
+
+    const id =
+        getValue("id").trim();
+
+    const name =
+        getValue("name").trim();
+
+    if (!id || !name) {
+
+        alert(
+            "Server ID and name are required."
+        );
+
+        return;
+    }
+
+    const server = {
+
+        id: id,
+
+        name: name,
+
+        shortName:
+            getValue("shortName") ||
+            name.slice(0, 3).toUpperCase(),
+
+        description:
+            getValue("description"),
+
+        longDescription:
+            getValue("longDescription") ||
+            getValue("description"),
+
+        game:
+            getValue("game"),
+
+        mode:
+            getValue("mode"),
+
+        map:
+            getValue("map"),
+
+        players:
+            getValue("players") || "0",
+
+        maxPlayers:
+            getValue("maxPlayers") || "64",
+
+        address:
+            getValue("address"),
+
+        status:
+            getValue("status") || "unknown",
+
+        featured:
+            document.getElementById(
+                "featured"
+            ).checked,
+
+        icon:
+            getValue("icon") ||
+            name.slice(0, 2).toUpperCase(),
+
+        artwork:
+            getValue("artwork"),
+
+        logo:
+            getValue("logo"),
+
+        banner:
+            getValue("banner"),
+
+        tags:
+            getValue("tags")
+                .split(",")
+                .map(
+                    value => value.trim()
+                )
+                .filter(Boolean),
+
+        links: {
+            discord:
+                getValue("discord") || "#",
+
+            steam:
+                getValue("steam") || "#",
+
+            website:
+                getValue("website") || "#"
+        }
+    };
+
+    const action =
+        editingId === null
+            ? "create"
+            : "update";
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/servers",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            action: action,
+                            originalId:
+                                editingId,
+                            server: server
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !result.ok
+        ) {
+            throw new Error(
+                result.error ||
+                "Unable to save server."
+            );
+        }
+
+        alert(
+            "Server saved successfully."
+        );
+
+        editingId = null;
+
+        clearServerForm();
+
+        document.getElementById(
+            "server-editor"
+        ).classList.add("hidden");
+
+        await loadServers();
+
+    } catch(error) {
+
+        alert(
+            "Unable to save server:\n\n" +
+            error.message
+        );
+    }
+}
+
+
+async function deleteServer(id) {
+
+    const server =
+        servers.find(
+            item =>
+                String(item.id) === String(id)
+        );
+
+    if (!server) {
+        return;
+    }
+
+    if (
+        !confirm(
+            "Delete '" +
+            server.name +
+            "'?"
+        )
+    ) {
+        return;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/servers",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            action: "delete",
+                            id: id
+                        })
+                }
+            );
+
+        const result =
+            await response.json();
+
+        if (
+            !response.ok ||
+            !result.ok
+        ) {
+            throw new Error(
+                result.error ||
+                "Unable to delete server."
+            );
+        }
+
+        await loadServers();
+
+    } catch(error) {
+
+        alert(
+            "Unable to delete server:\n\n" +
+            error.message
+        );
+    }
+}
+
+
+function clearServerForm() {
+
+    const fields = [
+        "id",
+        "name",
+        "shortName",
+        "description",
+        "longDescription",
+        "game",
+        "mode",
+        "map",
+        "players",
+        "maxPlayers",
+        "address",
+        "icon",
+        "artwork",
+        "logo",
+        "banner",
+        "tags",
+        "discord",
+        "steam",
+        "website"
+    ];
+
+    fields.forEach(
+        field =>
+            setValue(
+                field,
+                ""
+            )
+    );
+
+    setValue("players", "0");
+    setValue("maxPlayers", "64");
+    setValue("status", "online");
+
+    document.getElementById(
+        "featured"
+    ).checked = false;
+}
+
+
+function setValue(field, value) {
+
+    const element =
+        document.getElementById(
+            "server-" + field
+        );
+
+    if (element) {
+        element.value =
+            value == null
+                ? ""
+                : String(value);
+    }
+}
+
+
+function getValue(field) {
+
+    const element =
+        document.getElementById(
+            "server-" + field
+        );
+
+    return element
+        ? element.value
+        : "";
+}
+
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+
+function escapeJs(value) {
+
+    return String(value)
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r");
+}
+
+
+async function runValidate() {
+
+    alert(
+        "Run this in the terminal:\n\n" +
+        "./admin/server-guide validate"
+    );
+}
+
+
+loadServers();
+
+</script>
+
+</body>
+</html>

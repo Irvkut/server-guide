@@ -1,3 +1,64 @@
+
+/*
+============================================================
+ SERVER GUIDE — AUTHORITATIVE SERVER DATABASE
+============================================================
+
+The admin system stores servers in:
+
+    config/servers.json
+
+That file is the authoritative source.
+
+The synchronous load here intentionally happens before
+the SITE_CONFIG object is used by main.js, server.js,
+status.js, etc. This keeps the existing frontend compatible
+while allowing the admin system to control the site.
+
+If the JSON cannot be loaded, the legacy SITE_CONFIG.servers
+array remains available as a fallback.
+============================================================
+*/
+
+let SERVER_DATABASE = null;
+
+try {
+    const xhr = new XMLHttpRequest();
+
+    xhr.open(
+        "GET",
+        "config/servers.json?cache=" + Date.now(),
+        false
+    );
+
+    xhr.setRequestHeader(
+        "Cache-Control",
+        "no-cache, no-store, must-revalidate"
+    );
+
+    xhr.send(null);
+
+    if (
+        xhr.status >= 200 &&
+        xhr.status < 300
+    ) {
+        const parsed =
+            JSON.parse(xhr.responseText);
+
+        if (Array.isArray(parsed)) {
+            SERVER_DATABASE = parsed;
+        }
+    }
+
+} catch (error) {
+
+    console.warn(
+        "[SERVER GUIDE] Unable to load config/servers.json:",
+        error
+    );
+
+}
+
 /*
 ============================================================
  SERVER GUIDE 2.0 CONFIGURATION
@@ -360,3 +421,30 @@ const SITE_CONFIG = {
   ]
 
 };
+
+
+/*
+============================================================
+ AUTHORITATIVE SERVER OVERRIDE
+============================================================
+*/
+
+if (
+    Array.isArray(SERVER_DATABASE) &&
+    Array.isArray(SITE_CONFIG.servers)
+) {
+    SITE_CONFIG.servers =
+        SERVER_DATABASE;
+}
+
+window.ServerGuide =
+    window.ServerGuide || {};
+
+window.ServerGuide.servers =
+    SITE_CONFIG.servers;
+
+console.info(
+    "[SERVER GUIDE] Loaded " +
+    SITE_CONFIG.servers.length +
+    " server(s) from config/servers.json"
+);

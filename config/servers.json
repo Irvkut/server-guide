@@ -1,0 +1,102 @@
+[
+  {
+    "id": "2",
+    "name": "Synergie",
+    "shortName": "SYN",
+    "description": "Play through the full Half-Life 2 saga and custom campaigns together.",
+    "longDescription": "Play through the full Half-Life 2 saga and custom campaigns together.",
+    "game": "Synergy",
+    "mode": "Co-Op",
+    "map": "",
+    "players": "0",
+    "maxPlayers": "8",
+    "address": "65.191.33.122:27015",
+    "status": "online",
+    "featured": false,
+    "icon": "SY",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
+  },
+  {
+    "id": "1",
+    "name": "Enterprise",
+    "shortName": "ENT",
+    "description": "This is a private, whitelisted world for us to hang out, build together, and explore at our own pace. Whether you want to build a massive mega-base, start a cozy town, or just chill in voice chat while mining, you're welcome here!",
+    "longDescription": "This is a private, whitelisted world for us to hang out, build together, and explore at our own pace. Whether you want to build a massive mega-base, start a cozy town, or just chill in voice chat while mining, you're welcome here!",
+    "game": "Minecraft",
+    "mode": "Survival",
+    "map": "N/A",
+    "players": "0",
+    "maxPlayers": "10",
+    "address": "65.191.33.122:25565",
+    "status": "online",
+    "featured": false,
+    "icon": "EN",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
+  },
+  {
+    "id": "3",
+    "name": "Turnedun",
+    "shortName": "TUR",
+    "description": "Grab your gear and get ready to survive.",
+    "longDescription": "Grab your gear and get ready to survive.",
+    "game": "Unturned",
+    "mode": "PVPVE",
+    "map": "PEI",
+    "players": "0",
+    "maxPlayers": "8",
+    "address": "65.191.33.122:27016",
+    "status": "online",
+    "featured": false,
+    "icon": "TU",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
+  },
+  {
+    "id": "4",
+    "name": "Orun",
+    "shortName": "ORU",
+    "description": "Left 4 Dead 2",
+    "longDescription": "Left 4 Dead 2",
+    "game": "Left 4 Dead 2",
+    "mode": "Campaign",
+    "map": "N/A",
+    "players": "0",
+    "maxPlayers": "8",
+    "address": "65.191.33.122:27018",
+    "status": "online",
+    "featured": false,
+    "icon": "OR",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
+  }
+]
