@@ -98,5 +98,66 @@
       "steam": "#",
       "website": "#"
     }
+  },
+  {
+    "id": "combine-war",
+    "name": "Combine War",
+    "shortName": "CW",
+    "description": "Resistance vs Combine Conquest: capture objectives, drain tickets, build your loadout.",
+    "longDescription": "Team-based Half-Life 2 Conquest for Garry's Mod. Capture and hold objectives, drain the enemy's tickets, earn ranks and unlock attachments, and deploy with saved loadouts. Rounds end with an after-action report and MVPs.",
+    "game": "Garry's Mod",
+    "mode": "Conquest PvP",
+    "map": "gm_construct",
+    "players": "0",
+    "maxPlayers": "24",
+    "address": "TBD",
+    "status": "offline",
+    "featured": true,
+    "icon": "CW",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [
+      "PvP",
+      "Half-Life 2",
+      "Conquest",
+      "Progression",
+      "Loadouts"
+    ],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
+  },
+  {
+    "id": "hood-ffa",
+    "name": "Hood FFA (working title)",
+    "shortName": "HD",
+    "description": "Free-for-all city warfare: guns, cash, robberies and cars. Coming soon.",
+    "longDescription": "An open-city free-for-all gamemode for Garry's Mod in the style of Hood Warfare and Hood Simulator. Earn cash, buy guns, rob stores and fight for the streets. In development.",
+    "game": "Garry's Mod",
+    "mode": "Free-for-all PvP",
+    "map": "TBD",
+    "players": "0",
+    "maxPlayers": "32",
+    "address": "TBD",
+    "status": "offline",
+    "featured": false,
+    "icon": "HD",
+    "artwork": "",
+    "logo": "",
+    "banner": "",
+    "tags": [
+      "PvP",
+      "FFA",
+      "City",
+      "Coming soon"
+    ],
+    "links": {
+      "discord": "#",
+      "steam": "#",
+      "website": "#"
+    }
   }
 ]
