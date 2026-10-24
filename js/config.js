@@ -74,20 +74,20 @@ You should NOT normally need to edit the HTML files.
 const SITE_CONFIG = {
 
   site: {
-    name: "SERVER GUIDE",
-    tagline: "Game servers and community connections",
-    mark: "SG",
+    name: "TORCHLINE",
+    tagline: "Small servers. Real people.",
+    mark: "TL",
 
     hero: {
       label: "FEATURED SERVER",
       title: "Combine War",
       description:
-        "Enter the battlefield. Choose your side and join the fight.",
+        "Resistance vs Combine in a Conquest war for City 17. Pick a side.",
       button: "VIEW SERVER"
     },
 
     footer: {
-      left: "SERVER GUIDE",
+      left: "TORCHLINE",
       right: "© 2026"
     }
   },

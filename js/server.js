@@ -121,6 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   document.title =
-    `${server.name} — SERVER GUIDE`;
+    `${server.name} — TORCHLINE`;
 
 });
