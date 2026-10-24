@@ -74,9 +74,9 @@ You should NOT normally need to edit the HTML files.
 const SITE_CONFIG = {
 
   site: {
-    name: "REDLINE",
+    name: "TORCHLINE",
     tagline: "Small servers. Real people.",
-    mark: "RL",
+    mark: "TL",
 
     hero: {
       label: "FEATURED SERVER",
@@ -87,7 +87,7 @@ const SITE_CONFIG = {
     },
 
     footer: {
-      left: "REDLINE",
+      left: "TORCHLINE",
       right: "© 2026"
     }
   },

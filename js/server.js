@@ -121,6 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   document.title =
-    `${server.name} — REDLINE`;
+    `${server.name} — TORCHLINE`;
 
 });
